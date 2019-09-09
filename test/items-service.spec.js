@@ -1,8 +1,8 @@
-const ItemsService = require('../src/items-service')
+const ItemsService = require('../src/items/items-service')
 const knex = require('knex')
 
 
-describe(`Articles service object`, function() {
+describe(`Items service object`, function() {
     let db
     // test items (use dummy items list from React side!)
     let testItems = [
@@ -30,7 +30,6 @@ describe(`Articles service object`, function() {
             completed: false,
             index: 201901
         },
-
     ]
     //check db connection
     before(() => {
@@ -39,6 +38,14 @@ describe(`Articles service object`, function() {
         connection: process.env.TEST_DB_URL,
        })
     })
+ 
+    //clear table so its fresh with each test and we don't keep adding the items
+     before(() => db('chiclet_items'.truncate()))
+
+     afterEach(() => db('shopping_list').truncate())
+
+    //kill open database connection to complete the tests
+    after(() => db.destroy())
 
     //insert test items into database before the tests
     before(() => {
@@ -46,9 +53,6 @@ describe(`Articles service object`, function() {
         .into('blogful_articles')
         .insert(testArticles)
     })
-
-    //kill open database connection to complete the tests
-    after(() => db.destroy())
 
 describe(`getAllArticles()`, () => {
  it(`resolves all articles from 'chiclet_items' table for the current year and user`, () => {

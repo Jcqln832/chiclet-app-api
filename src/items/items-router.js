@@ -6,8 +6,9 @@ const itemsRouter = express.Router()
 
 itemsRouter
   .route('/months')
+//   .all(requireAuth)
   .get((req, res, next) => {
-    ItemsService.getAllItems(req.app.get('db'))
+    ItemsService.getAllItems(req.app.get('db'), 1)
       .then(items => {
         res.json(ItemsService.serializeItems(items))
       })
@@ -17,43 +18,39 @@ itemsRouter
 itemsRouter
   .route('/month/:monthid')
   .all(requireAuth)
-  .all(checkThingExists)
   .get((req, res) => {
-    res.json(ThingsService.serializeThing(res.thing))
+    res.json(ItemsService.serializeItems(res.item))
   })
 
 itemsRouter.route('/edit/:itemid')
   .all(requireAuth)
-  .all(checkThingExists)
+  .all(checkItemExists)
   .get((req, res, next) => {
-    ThingsService.getReviewsForThing(
+    ItemsService.getReviewsForItem(
       req.app.get('db'),
-      req.params.thing_id
+      req.params.itemid
     )
-      .then(reviews => {
-        res.json(ThingsService.serializeThingReviews(reviews))
-      })
       .catch(next)
   })
 
 /* async/await syntax for promises */
-async function checkThingExists(req, res, next) {
+async function checkItemExists(req, res, next) {
   try {
-    const thing = await ThingsService.getById(
+    const item = await ItemsService.getById(
       req.app.get('db'),
       req.params.thing_id
     )
 
-    if (!thing)
+    if (!item)
       return res.status(404).json({
-        error: `Thing doesn't exist`
+        error: `Item doesn't exist`
       })
 
-    res.thing = thing
+    res.item = item
     next()
   } catch (error) {
     next(error)
   }
 }
 
-module.exports = thingsRouter
+module.exports = itemsRouter

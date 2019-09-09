@@ -17,68 +17,49 @@ function makeUsersArray() {
       id: 3,
       user_name: 'test-user-3',
       password: 'password'
-    },
-    {
-      id: 4,
-      user_name: 'test-user-4',
-      password: 'password'
     }
   ]
 }
 
-function makeThingsArray(users) {
+function makeItemsArray(users) {
   return [
     {
-      id: 1,
-      title: 'First test thing!',
-      image: 'http://placehold.it/500x500',
-      user_id: users[0].id,
-      date_created: '2029-01-22T16:28:32.615Z',
-      content: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Natus consequuntur deserunt commodi, nobis qui inventore corrupti iusto aliquid debitis unde non.Adipisci, pariatur.Molestiae, libero esse hic adipisci autem neque ?',
-    },
-    {
-      id: 2,
-      title: 'Second test thing!',
-      image: 'http://placehold.it/500x500',
-      user_id: users[1].id,
-      date_created: '2029-01-22T16:28:32.615Z',
-      content: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Natus consequuntur deserunt commodi, nobis qui inventore corrupti iusto aliquid debitis unde non.Adipisci, pariatur.Molestiae, libero esse hic adipisci autem neque ?',
-    },
-    {
-      id: 3,
-      title: 'Third test thing!',
-      image: 'http://placehold.it/500x500',
-      user_id: users[2].id,
-      date_created: '2029-01-22T16:28:32.615Z',
-      content: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Natus consequuntur deserunt commodi, nobis qui inventore corrupti iusto aliquid debitis unde non.Adipisci, pariatur.Molestiae, libero esse hic adipisci autem neque ?',
-    },
-    {
-      id: 4,
-      title: 'Fourth test thing!',
-      image: 'http://placehold.it/500x500',
-      user_id: users[3].id,
-      date_created: '2029-01-22T16:28:32.615Z',
-      content: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Natus consequuntur deserunt commodi, nobis qui inventore corrupti iusto aliquid debitis unde non.Adipisci, pariatur.Molestiae, libero esse hic adipisci autem neque ?',
-    },
+        id: 1,
+        item: "First Item",
+        author: "reggie",
+        month: "January",
+        completed: false,
+        index: 201901
+      },
+      {
+        id: 2,
+        item: "Second Item",
+        author: "reggie",
+        month: "February",
+        completed: false,
+        index: 201902
+      },
+      {
+        id: 3,
+        item: "Another Item",
+        author: "reggie",
+        month: "January",
+        completed: false,
+        index: 201901
+      },
   ]
 }
 
-function makeExpectedThing(users, thing, reviews=[]) {
+function makeExpectedItem(users, item) {
   const user = users
-    .find(user => user.id === thing.user_id)
-
-  const thingReviews = reviews
-    .filter(review => review.thing_id === thing.id)
-
-  const number_of_reviews = thingReviews.length
-  const average_review_rating = calculateAverageReviewRating(thingReviews)
+    .find(user => user.id === item.user_id)
 
   return {
-    id: thing.id,
-    image: thing.image,
-    title: thing.title,
-    content: thing.content,
-    date_created: thing.date_created,
+    id: item.id,
+    image: item.image,
+    title: item.title,
+    content: item.content,
+    date_created: item.date_created,
     number_of_reviews,
     average_review_rating,
     user: {
@@ -91,8 +72,8 @@ function makeExpectedThing(users, thing, reviews=[]) {
   }
 }
 
-function makeMaliciousThing(user) {
-  const maliciousThing = {
+function makeMaliciousItem(user) {
+  const maliciousItem = {
     id: 911,
     image: 'http://placehold.it/500x500',
     date_created: new Date().toISOString(),
@@ -100,41 +81,37 @@ function makeMaliciousThing(user) {
     user_id: user.id,
     content: `Bad image <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.`,
   }
-  const expectedThing = {
-    ...makeExpectedThing([user], maliciousThing),
+  const expectedItem = {
+    ...makeExpectedItem([user], maliciousItem),
     title: 'Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt;',
     content: `Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.`,
   }
   return {
-    maliciousThing,
-    expectedThing,
+    maliciousItem,
+    expectedItem,
   }
 }
 
-function makeThingsFixtures() {
+function makeItemsFixtures() {
   const testUsers = makeUsersArray()
-  const testThings = makeThingsArray(testUsers)
-  const testReviews = makeReviewsArray(testUsers, testThings)
-  return { testUsers, testThings, testReviews }
+  const testItems = makeItemsArray(testUsers)
+  return { testUsers, testItems }
 }
 
 function cleanTables(db) {
   return db.transaction(trx =>
     trx.raw(
     `TRUNCATE
-      thingful_things,
-      thingful_users,
-      thingful_reviews
+      chiclet_items,
+      chiclet_users
     `
   )
   .then(() =>
   Promise.all([
-    trx.raw(`ALTER SEQUENCE thingful_things_id_seq minvalue 0 START WITH 1`),
-    trx.raw(`ALTER SEQUENCE thingful_users_id_seq minvalue 0 START WITH 1`),
-    trx.raw(`ALTER SEQUENCE thingful_reviews_id_seq minvalue 0 START WITH 1`),
-    trx.raw(`SELECT setval('thingful_things_id_seq', 0)`),
-    trx.raw(`SELECT setval('thingful_users_id_seq', 0)`),
-    trx.raw(`SELECT setval('thingful_reviews_id_seq', 0)`),
+    trx.raw(`ALTER SEQUENCE chiclet_items_id_seq minvalue 0 START WITH 1`),
+    trx.raw(`ALTER SEQUENCE chiclet_users_id_seq minvalue 0 START WITH 1`),
+    trx.raw(`SELECT setval('chiclet_items_id_seq', 0)`),
+    trx.raw(`SELECT setval('chiclet_users_id_seq', 0)`),
   ])
   )
 )
@@ -145,63 +122,44 @@ function seedUsers(db, users) {
     ...user,
     password: bcrypt.hashSync(user.password, 1)
   }))
-    return db.into('thingful_users').insert(preppedUsers)
+    return db.into('chiclet_users').insert(preppedUsers)
       .then(() =>
       // update the auto sequence to stay in sync
         db.raw(
-           `SELECT setval('thingful_users_id_seq', ?)`,
+           `SELECT setval('chiclet_users_id_seq', ?)`,
            [users[users.length - 1].id],
         )
       )
 }
 
-function seedThingsTables(db, users, things, reviews=[]) {
-  // return db
-  //   .into('thingful_users')
-  //   .insert(users)
-  //   .then(() =>
-  //     db
-  //       .into('thingful_things')
-  //       .insert(things)
-  //   )
-  //   .then(() =>
-  //     reviews.length && db.into('thingful_reviews').insert(reviews)
-  //   )
+function seedItemsTables(db, users, things, reviews=[]) {
 
   // use a transaction to group the queries and auto rollback on any failure
   return db.transaction(async trx => {
     await seedUsers(trx, users)
-    await trx.into('thingful_things').insert(things)      
+    await trx.into('chiclet_items').insert(items)      
       // update the auto sequence to match the forced id values
       await Promise.all([
         trx.raw(
-          `SELECT setval('thingful_users_id_seq', ?)`,
+          `SELECT setval('chiclet_users_id_seq', ?)`,
           [users[users.length - 1].id],
         ),
         trx.raw(
-          `SELECT setval('thingful_things_id_seq', ?)`,
-          [things[things.length - 1].id],
+          `SELECT setval('chiclet_items_id_seq', ?)`,
+          [items[items.length - 1].id],
         ),
       ])
-      // only insert reviews if there are some, also update the sequence counter
-      if (reviews.length) {
-        await trx.into('thingful_reviews').insert(reviews)
-        await trx.raw(
-          `SELECT setval('thingful_reviews_id_seq', ?)`,
-          [reviews[reviews.length - 1].id],
-        )
-      }
   })
 }
 
-function seedMaliciousThing(db, user, thing) {
+function seedMaliciousItem(db, user, item) {
   return db
-    .into('thingful_users')
+    .into('chiclet_users')
     .insert([user])
     .then(() =>
       db
-        .into('thingful_things')
-        .insert([thing])
+        .into('chiclet_items')
+        .insert([item])
     )
 }
 
@@ -215,16 +173,14 @@ function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
 
 module.exports = {
   makeUsersArray,
-  makeThingsArray,
-  makeExpectedThing,
-  makeExpectedThingReviews,
-  makeMaliciousThing,
-  makeReviewsArray,
+  makeItemsArray,
+  makeExpectedItem,
+  makeMaliciousItem,
 
-  makeThingsFixtures,
+  makeItemsFixtures,
   cleanTables,
-  seedThingsTables,
-  seedMaliciousThing,
+  seedItemsTables,
+  seedMaliciousItem,
   makeAuthHeader,
   seedUsers,
 }
