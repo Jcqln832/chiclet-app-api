@@ -1,15 +1,18 @@
+const xss = require('xss')
+const Treeize = require('treeize')
+
 const ItemsService = {
-    getAllItems(knex, id) {
+    getAllUsersItems(knex, id) {
         return knex
         .select('*')
         .from('chiclet_items AS item')
-        .where(item.user_id, id)
+        .where('item.user_id', id)
     },
     getById(knex, id) {
         return knex
-         .from('chiclet_items')
+         .from('chiclet_items AS item')
          .select('*')
-         .where('id', id)
+         .where('item.id', id)
          .first()
     },
     deleteItem(knex, id) {
@@ -29,6 +32,27 @@ const ItemsService = {
           .returning('*')
           .then(rows => rows[0])
     },
+    serializeItems(items) {
+        return items.map(this.serializeItem)
+    },
+    serializeItem(item) {
+        const itemTree = new Treeize()
+    
+        // Some light hackiness to allow for the fact that `treeize`
+        // only accepts arrays of objects, and we want to use a single
+        // object.
+        const itemData = itemTree.grow([ item ]).getData()[0]
+    
+        return {
+          id: itemData.id,
+          item: xss(itemData.content),
+          user: itemData.user_id,
+          month: itemData.months,
+          completed: itemData.completed,
+          index: itemData.index
+        //   date_created: thingData.date_created,
+        }
+      },
 }
 
 module.exports = ItemsService

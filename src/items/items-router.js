@@ -5,33 +5,33 @@ const { requireAuth } = require('../middleware/jwt-auth')
 const itemsRouter = express.Router()
 
 itemsRouter
-  .route('/months')
-//   .all(requireAuth)
+  .route('/')
+  .all(requireAuth)
   .get((req, res, next) => {
-    ItemsService.getAllItems(req.app.get('db'), 1)
+    ItemsService.getAllUsersItems(req.app.get('db'), 1)
       .then(items => {
         res.json(ItemsService.serializeItems(items))
       })
       .catch(next)
   })
 
-itemsRouter
-  .route('/month/:monthid')
-  .all(requireAuth)
-  .get((req, res) => {
-    res.json(ItemsService.serializeItems(res.item))
-  })
+// itemsRouter
+//   .route('/month/:monthid')
+//   .all(requireAuth)
+//   .get((req, res) => {
+//     res.json(ItemsService.serializeItems(res.item))
+//   })
 
-itemsRouter.route('/edit/:itemid')
-  .all(requireAuth)
-  .all(checkItemExists)
-  .get((req, res, next) => {
-    ItemsService.getReviewsForItem(
-      req.app.get('db'),
-      req.params.itemid
-    )
-      .catch(next)
-  })
+// itemsRouter.route('/edit/:itemid')
+//   .all(requireAuth)
+//   .all(checkItemExists)
+//   .get((req, res, next) => {
+//     ItemsService.getReviewsForItem(
+//       req.app.get('db'),
+//       req.params.itemid
+//     )
+//       .catch(next)
+//   })
 
 /* async/await syntax for promises */
 async function checkItemExists(req, res, next) {

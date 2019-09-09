@@ -42,7 +42,7 @@ describe(`Items service object`, function() {
     //clear table so its fresh with each test and we don't keep adding the items
      before(() => db('chiclet_items'.truncate()))
 
-     afterEach(() => db('shopping_list').truncate())
+     afterEach(() => db('chiclet_items').truncate())
 
     //kill open database connection to complete the tests
     after(() => db.destroy())
@@ -50,16 +50,16 @@ describe(`Items service object`, function() {
     //insert test items into database before the tests
     before(() => {
         return db
-        .into('blogful_articles')
-        .insert(testArticles)
+        .into('chiclet_items')
+        .insert(testItems)
     })
 
-describe(`getAllArticles()`, () => {
+describe(`getAllAItems()`, () => {
  it(`resolves all articles from 'chiclet_items' table for the current year and user`, () => {
        // test that ArticlesService.getAllArticles gets data from table
        return ItemsService.getAllItems(db)
        .then(actual => {
-           expect(actual).to.equal(testArticles)
+           expect(actual).to.equal(testItems)
        })
      })
 })
