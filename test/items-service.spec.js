@@ -1,66 +1,314 @@
 const ItemsService = require('../src/items/items-service')
+const testHelpers = require('./test-helpers')
+const app = require('../src/app')
 const knex = require('knex')
 
-
-describe(`Items service object`, function() {
+describe(`Items Endpoints tests`, function() {
     let db
-    // test items (use dummy items list from React side!)
-    let testItems = [
-        {
-            id: 1,
-            item: "First Item",
-            user_id: "reggie",
-            month: "January",
-            completed: false,
-            index: 201901
-        },
-        {
-            id: 2,
-            item: "Second Item",
-            user_id: "reggie",
-            month: "February",
-            completed: false,
-            index: 201902
-        },
-        {
-            id: 3,
-            item: "Another Item",
-            user_id: "reggie",
-            month: "January",
-            completed: false,
-            index: 201901
-        },
-    ]
-    //check db connection
-    before(() => {
+
+    // bring in users array and items array for passing as parameters
+    const {
+        testUsers,
+        testItems
+    } = testHelpers.makeItemsFixtures()
+    console.log(testUsers)
+    console.log(testItems)
+
+    before('make knex instance', () => {
         db = knex({
-        client: 'pg',
-        connection: process.env.TEST_DB_URL,
-       })
+          client: 'pg',
+          connection: process.env.TEST_DB_URL,
+        })
+        app.set('db', db)
+      })
+    
+      after('disconnect from db', () => db.destroy())
+    
+      before('cleanup', () => db('chiclet_items').truncate())
+    
+      afterEach('cleanup', () => db('chiclet_items').truncate())
+
+// Unauthorized
+      describe(`Unauthorized requests`, () => {
+        const testItems = testHelpers.makeItemsArray(testUsers)
+    
+        // beforeEach('insert items', () => {
+        //   return db
+        //     .into('chiclet_items')
+        //     .insert(testItems)
+        // })
+
+        before('insert items', () =>
+        testHelpers.seedItemsTables(
+          db,
+          testUsers,
+          testItems,
+        )
+      )
+    
+        it(`responds with 401 Unauthorized for GET /api/items`, () => {
+          return supertest(app)
+            .get('/api/items')
+            .expect(401, { error: 'Unauthorized request' })
+        })
+    
+        it(`responds with 401 Unauthorized for POST /api/items`, () => {
+          return supertest(app)
+            .post('/api/items')
+            .send({ content: 'test-item-woo', index: 201903, })
+            .expect(401, { error: 'Unauthorized request' })
+        })
+    
+        it(`responds with 401 Unauthorized for GET /api/items/:id`, () => {
+          const secondItem = testItems[1]
+          return supertest(app)
+            .get(`/api/items/${secondItem.id}`)
+            .expect(401, { error: 'Unauthorized request' })
+        })
+    
+        it(`responds with 401 Unauthorized for DELETE /api/items/:id`, () => {
+          const testItem = testItems[1]
+          return supertest(app)
+            .delete(`/api/items/${testItem.id}`)
+            .expect(401, { error: 'Unauthorized request' })
+        })
+    
+        it(`responds with 401 Unauthorized for PATCH /api/items/:id`, () => {
+          const testItem = testItems[1]
+          return supertest(app)
+            .patch(`/api/items/${testItem.id}`)
+            .send({ title: 'updated-title' })
+            .expect(401, { error: 'Unauthorized request' })
+        })
+      })
+    // Get the items (JWT authorized)
+      describe('GET /api/items', () => {
+        context(`Given no items`, () => {
+          it(`responds with 200 and an empty list`, () => {
+            return supertest(app)
+              .get('/api/items')
+              .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
+              .expect(200, [])
+          })
+        })
+    
+        context('Given there are items in the database', () => {
+          const testItems = testHelpers.makeItemsArray(testUsers)
+    
+          beforeEach('insert items', () => {
+            return db
+              .into('chiclet_items')
+              .insert(testItems)
+          })
+    
+          it('gets the items from the store', () => {
+            usersItems = testItems.filter(item => item.user_id === testUsers[0].id)
+            return supertest(app)
+              .get('/api/items')
+              .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
+              .expect(200, usersItems)
+          })
+        })
+    
+        context(`Given an XSS attack item`, () => {
+          const { maliciousItem, expectedItem } = testHelpers.makeMaliciousItem()
+    
+          beforeEach('insert malicious item', () => {
+            return db
+              .into('chiclet_items')
+              .insert([maliciousItem])
+          })
+    
+          it('removes XSS attack content', () => {
+            return supertest(app)
+              .get(`/api/items`)
+              .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
+              .expect(200)
+              .expect(res => {
+                expect(res.body[0].content).to.eql(expectedItem.content)
+              })
+          })
+        })
+      })
+
+      describe('DELETE /api/items/:id', () => {
+        context(`Given no items`, () => {
+          it(`responds 404 whe item doesn't exist`, () => {
+            return supertest(app)
+              .delete(`/api/items/123`)
+              .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
+              .expect(404, {
+                error: { message: `Item Not Found` }
+              })
+          })
+        })
+    
+        context('Given there are items in the database', () => {
+          const testItems = testHelpers.makeItemsArray(testUsers)
+    
+          beforeEach('insert items', () => {
+            return db
+              .into('chiclet_items')
+              .insert(testItems)
+          })
+    
+          it('removes the item by ID from the store', () => {
+            const idToRemove = 2
+            const expectedItems = testItems.filter(item => item.id !== idToRemove)
+            return supertest(app)
+              .delete(`/api/items/${idToRemove}`)
+              .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+              .expect(204)
+              .then(() =>
+                supertest(app)
+                  .get(`/api/items`)
+                  .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
+                  .expect(expectedItems)
+              )
+          })
+        })
+      })
+    
+      describe('POST /api/items', () => {
+        ['content', 'completed'].forEach(field => {
+          const newItem = {
+            content: 'test-item content',
+            index: 201903
+          }
+    
+          it(`responds with 400 missing '${field}' if not supplied`, () => {
+            delete newItem[field]
+    
+            return supertest(app)
+              .post(`/api/items`)
+              .send(newItem)
+              .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
+              .expect(400, {
+                error: { message: `'${field}' is required` }
+              })
+          })
+        })
+        it('adds a new item to the store', () => {
+            const newItem = {
+              content: 'test item content',
+              completed: 'false',
+              index: '201907',
+              user_id: 2,
+            }
+            return supertest(app)
+              .post(`/api/items`)
+              .send(newItem)
+              .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
+              .expect(201)
+              .expect(res => {
+                expect(res.body.contemt).to.eql(newItem.content)
+                expect(res.body.url).to.eql(newItem.url)
+                expect(res.body).to.have.property('id')
+                expect(res.headers.location).to.eql(`/api/items/${res.body.id}`)
+              })
+              .then(res =>
+                supertest(app)
+                  .get(`/api/items/${res.body.id}`)
+                  .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
+                  .expect(res.body)
+              )
+          })
+      
+          it('removes XSS attack content from response', () => {
+            const { maliciousItem, expectedItem } = testHelpers.makeMaliciousItem()
+            return supertest(app)
+              .post(`/api/items`)
+              .send(maliciousItem)
+              .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
+              .expect(201)
+              .expect(res => {
+                expect(res.body.content).to.eql(expectedItem.content)
+            
+              })
+          })
+        })
+      
+        describe(`PATCH /api/items/:item_id`, () => {
+          context(`Given no items`, () => {
+            it(`responds with 404`, () => {
+              const itemId = 123456
+              return supertest(app)
+                .patch(`/api/items/${itemId}`)
+                .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
+                .expect(404, { error: { message: `Item Not Found` } })
+            })
+          })
+      
+          context('Given there are items in the database', () => {
+            const testItems = testHelpers.makeItemsArray(testUsers)
+      
+            beforeEach('insert items', () => {
+              return db
+                .into('chiclet_items')
+                .insert(testItems)
+            })
+      
+            it('responds with 204 and updates the item', () => {
+              const idToUpdate = 2
+              const updateItem = {
+                content: 'updated item content',
+              }
+              const expectedArticle = {
+                ...testItems[idToUpdate - 1],
+                ...updateItem
+              }
+              return supertest(app)
+                .patch(`/api/items/${idToUpdate}`)
+                .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
+                .send(updateItem)
+                .expect(204)
+                .then(res =>
+                  supertest(app)
+                    .get(`/api/items/${idToUpdate}`)
+                    .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
+                    .expect(expectedArticle)
+                )
+            })
+      
+            it(`responds with 400 when no required fields supplied`, () => {
+              const idToUpdate = 2
+              return supertest(app)
+                .patch(`/api/items/${idToUpdate}`)
+                .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
+                .send({ irrelevantField: 'foo' })
+                .expect(400, {
+                  error: {
+                    message: `Request body must contain either content or new completed status`
+                  }
+                })
+            })
+      
+            it(`responds with 204 when updating only a subset of fields`, () => {
+              const idToUpdate = 2
+              const updateItem = {
+                content: 'updated item content',
+              }
+              const expectedItem = {
+                ...testItems[idToUpdate - 1],
+                ...updateItem
+              }
+      
+              return supertest(app)
+                .patch(`/api/items/${idToUpdate}`)
+                .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
+                .send({
+                  ...updateItem,
+                  fieldToIgnore: 'should not be in GET response'
+                })
+                .expect(204)
+                .then(res =>
+                  supertest(app)
+                    .get(`/api/items/${idToUpdate}`)
+                    .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
+                    .expect(expectedItem)
+                )
+            })
+
+        })
     })
- 
-    //clear table so its fresh with each test and we don't keep adding the items
-     before(() => db('chiclet_items'.truncate()))
-
-     afterEach(() => db('chiclet_items').truncate())
-
-    //kill open database connection to complete the tests
-    after(() => db.destroy())
-
-    //insert test items into database before the tests
-    before(() => {
-        return db
-        .into('chiclet_items')
-        .insert(testItems)
-    })
-
-describe(`getAllAItems()`, () => {
- it(`resolves all articles from 'chiclet_items' table for the current year and user`, () => {
-       // test that ArticlesService.getAllArticles gets data from table
-       return ItemsService.getAllItems(db)
-       .then(actual => {
-           expect(actual).to.equal(testItems)
-       })
-     })
-})
 })

@@ -25,66 +25,43 @@ function makeItemsArray(users) {
   return [
     {
         id: 1,
-        item: "First Item",
-        author: "reggie",
-        month: "January",
-        completed: false,
+        content: "First Item",
+        user_id: users[0].id,
         index: 201901
       },
       {
         id: 2,
-        item: "Second Item",
-        author: "reggie",
-        month: "February",
-        completed: false,
+        content: "Second Item",
+        user_id: users[0].id,
         index: 201902
       },
       {
         id: 3,
-        item: "Another Item",
-        author: "reggie",
-        month: "January",
-        completed: false,
-        index: 201901
+        content: "Item number 3",
+        user_id: users[1].id,
+        index: 201902
       },
   ]
 }
 
-function makeExpectedItem(users, item) {
-  const user = users
-    .find(user => user.id === item.user_id)
-
+function makeExpectedItem(item) {
   return {
     id: item.id,
-    image: item.image,
-    title: item.title,
     content: item.content,
-    date_created: item.date_created,
-    number_of_reviews,
-    average_review_rating,
-    user: {
-      id: user.id,
-      user_name: user.user_name,
-      full_name: user.full_name,
-      nickname: user.nickname,
-      date_created: user.date_created,
-    },
+    user_id: item.user_id
   }
 }
 
 function makeMaliciousItem(user) {
   const maliciousItem = {
     id: 911,
-    image: 'http://placehold.it/500x500',
-    date_created: new Date().toISOString(),
-    title: 'Naughty naughty very naughty <script>alert("xss");</script>',
-    user_id: user.id,
-    content: `Bad image <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.`,
+    content: 'Naughty naughty very naughty <script>alert("xss");</script> <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">',
+    user_id: 2,
+    index: 201908
   }
   const expectedItem = {
-    ...makeExpectedItem([user], maliciousItem),
-    title: 'Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt;',
-    content: `Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.`,
+    ...makeExpectedItem(maliciousItem),
+    content: 'Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt; <img src="https://url.to.file.which/does-not.exist">',
   }
   return {
     maliciousItem,
@@ -132,7 +109,7 @@ function seedUsers(db, users) {
       )
 }
 
-function seedItemsTables(db, users, things, reviews=[]) {
+function seedItemsTables(db, users, items) {
 
   // use a transaction to group the queries and auto rollback on any failure
   return db.transaction(async trx => {

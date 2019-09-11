@@ -18,7 +18,7 @@ app.use(morgan(morganOption))
 app.use(cors())
 app.use(helmet())
 
-app.use('/api/months', itemsRouter)
+app.use('/api/items', itemsRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/users', usersRouter)
 

@@ -3,35 +3,89 @@ const ItemsService = require('./items-service')
 const { requireAuth } = require('../middleware/jwt-auth')
 
 const itemsRouter = express.Router()
+const bodyParser = express.json()
 
 itemsRouter
   .route('/')
   .all(requireAuth)
+
+  // get items and post a new item
   .get((req, res, next) => {
-    ItemsService.getAllUsersItems(req.app.get('db'), 1)
+    ItemsService.getAllUsersItems(req.app.get('db'), req.user.id)
       .then(items => {
         res.json(ItemsService.serializeItems(items))
       })
       .catch(next)
   })
 
-// itemsRouter
-//   .route('/month/:monthid')
-//   .all(requireAuth)
-//   .get((req, res) => {
-//     res.json(ItemsService.serializeItems(res.item))
-//   })
+  .post(bodyParser, (req, res, next) => {
+    const { content, index } = req.body
+    const user_id = req.user.id
+    const newItem = { content, index, user_id }
 
-// itemsRouter.route('/edit/:itemid')
-//   .all(requireAuth)
-//   .all(checkItemExists)
-//   .get((req, res, next) => {
-//     ItemsService.getReviewsForItem(
-//       req.app.get('db'),
-//       req.params.itemid
-//     )
-//       .catch(next)
-//   })
+    for (const field of ["content", "index"]) {
+      if (!newItem[field]) {
+        return res.status(400).send({
+          error: { message: `'${field}' is required` }
+        })
+      }
+    }
+
+    ItemsService.insertItem(
+      req.app.get('db'),
+      newItem
+    )
+      .then(item => {
+        res
+          .status(201)
+          // .location(path.posix.join(req.originalUrl))
+          .json(ItemsService.serializeItem(item))
+      })
+      .catch(next)
+  })
+
+// update item (edit or delete)
+itemsRouter
+  .route('/:itemId')
+  .all(requireAuth)
+
+  .delete((req, res, next) => {
+    const { itemId } = req.params
+    ItemsService.deleteItem(
+      req.app.get('db'),
+      itemId
+    )
+      .then(numRowsAffected => {
+        res.status(204).end()
+      })
+      .catch(next)
+  })
+
+  .patch(bodyParser, (req, res, next) => {
+    const { content, completed } = req.body
+    const newItemFields = { content, completed }
+
+    // array.filter(bool) -- Only values which do not return false will be added to the array
+    const numberOfValues = Object.values(newItemFields).filter(Boolean).length
+
+    if(numberOfValues === 0) {
+      return res.status(400).json({
+        error: {
+          message: `Request body must contain either content or new completed status`
+        }
+      })
+    }
+
+    ItemsService.updateItem(
+      req.app.get('db'),
+      req.params.itemId,
+      newItemFields
+    )
+    .then(numRowsAffected => {
+      res.status(204).end()
+    })
+      .catch(next)
+  })
 
 /* async/await syntax for promises */
 async function checkItemExists(req, res, next) {

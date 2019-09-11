@@ -45,12 +45,10 @@ const ItemsService = {
     
         return {
           id: itemData.id,
-          item: xss(itemData.content),
-          user: itemData.user_id,
-          month: itemData.months,
+          content: xss(itemData.content),
+          user_id: itemData.user_id,
           completed: itemData.completed,
           index: itemData.index
-        //   date_created: thingData.date_created,
         }
       },
 }
