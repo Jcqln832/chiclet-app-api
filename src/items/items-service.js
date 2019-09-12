@@ -17,7 +17,8 @@ const ItemsService = {
     },
     deleteItem(knex, id) {
         return knex('chiclet_items')
-          .where({ id })
+         .from('chiclet_items AS item')
+          .where('item.id', id)
           .delete()
     },
     updateItem(knex, id, newItemFields) {

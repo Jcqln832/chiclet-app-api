@@ -56,7 +56,7 @@ function makeMaliciousItem(user) {
   const maliciousItem = {
     id: 911,
     content: 'Naughty naughty very naughty <script>alert("xss");</script> <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">',
-    user_id: 2,
+    user_id: user.id,
     index: 201908
   }
   const expectedItem = {
