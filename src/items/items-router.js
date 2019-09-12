@@ -66,7 +66,7 @@ itemsRouter
       .catch(next)
   })
 
-  // this is here for the .patch test ... ?
+  // this is here for the .patch test ... ?git
   .get((req, res, next) => {
     ItemsService.getById(req.app.get('db'), req.params.itemId)
       .then(item => {
