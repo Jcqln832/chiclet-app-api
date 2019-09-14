@@ -106,9 +106,12 @@ itemsRouter
       req.params.itemId,
       newItemFields
     )
-    .then(numRowsAffected => {
-      res.status(204).end()
+    .then(item => {
+      res.json(ItemsService.serializeItem(item))
     })
+    // .then(numRowsAffected => {
+    //   res.status(204).end()
+    // })
       .catch(next)
   })
 

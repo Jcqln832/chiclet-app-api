@@ -261,13 +261,7 @@ describe(`Items Endpoints tests`, function() {
                 .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
                 .send(updateItem)
                 .expect(204)
-                // .then(res =>
-                //   supertest(app)
-                //     .get(`/api/items/${idToUpdate}`)
-                //     .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
-                //     .expect(expectedItem)
-                // )
-                 .then(res =>
+                 .then(() =>
                   supertest(app)
                     .get(`/api/items/${idToUpdate}`)
                     .set('Authorization', testHelpers.makeAuthHeader(testUsers[0]))
