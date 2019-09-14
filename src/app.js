@@ -6,7 +6,7 @@ const helmet = require('helmet')
 const { NODE_ENV } = require('./config');
 const itemsRouter = require('./items/items-router')
 const authRouter = require('./auth/auth-router')
-const usersRouter = require('./users/users-router')
+const usersRouter = require('./Users/users-router')
 
 const app = express()
 
@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
 
 app.use(function errorHandler(error, req, res, next) {
   let response
-  if (NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production') {
     response = { error: { message: 'server error' } }
   } else {
     console.error(error)
