@@ -66,7 +66,6 @@ itemsRouter
       .catch(next)
   })
 
-  // this is here for the .patch test ... ?git
   .get((req, res, next) => {
     ItemsService.getById(req.app.get('db'), req.params.itemId)
       .then(item => {
@@ -107,13 +106,15 @@ itemsRouter
       newItemFields
     )
     .then(item => {
-      res.json(ItemsService.serializeItem(item))
+      res.status(201)
+      .json(ItemsService.serializeItem(item))
     })
     // .then(numRowsAffected => {
     //   res.status(204).end()
     // })
       .catch(next)
   })
+
 
 /* async/await syntax for promises */
 // async function checkItemExists(req, res, next) {
