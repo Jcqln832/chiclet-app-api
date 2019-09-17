@@ -22,11 +22,9 @@ const ItemsService = {
           .delete()
     },
     updateItem(knex, id, newItemFields) {
-        // return knex('chiclet_items AS item')
-        //   .where('item.id', id)
         return knex('chiclet_items')
         .where({ id })
-          .update(newItemFields)
+        .update(newItemFields)
     },
     insertItem(knex, newItem) {
         return knex
