@@ -1,6 +1,7 @@
 const express = require('express')
 const ItemsService = require('./items-service')
 const { requireAuth } = require('../middleware/jwt-auth')
+const xss = require('xss')
 
 const itemsRouter = express.Router()
 const bodyParser = express.json()
@@ -95,7 +96,7 @@ itemsRouter
     if(numberOfValues === 0) {
       return res.status(400).json({
         error: {
-          message: `Request body must contain either content or new completed status`
+          message: `Request body must contain either 'content' or new 'completed' status`
         }
       })
     }
@@ -105,13 +106,14 @@ itemsRouter
       req.params.itemId,
       newItemFields
     )
-    .then(item => {
-      res.status(201)
-      .json(ItemsService.serializeItem(item))
-    })
-    // .then(numRowsAffected => {
-    //   res.status(204).end()
+    // .then(item => {
+    //   res.status(201)
+    //   // .json(ItemsService.serializeItem(item))
+    //   .json(item)
     // })
+    .then(numRowsAffected => {
+      res.status(204).end()
+    })
       .catch(next)
   })
 

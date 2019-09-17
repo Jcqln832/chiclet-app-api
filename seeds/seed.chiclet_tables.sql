@@ -7,8 +7,8 @@ TRUNCATE
 
 INSERT INTO chiclet_users (user_name, password)
 VALUES
-  ('harryP', '$2a$11$Nm2wqmL2hmyCYyKoVGXS1.CV7JOTa4tjV/A3dxCJIMkJP3hI5Kneu'),
-  ('ronW', '$2a$11$4e032ASL8OMGD5VaUxoMHesrK.vaTWL0OA524xLiPR05RviIggt2i');
+  ('harryP', '$2a$11$yYO5ETDG1MURPYrj9YUS8eab1J99Xj3jEUDiOtpv1XzVJ1V89NHP6'),
+  ('ronW', '$2a$11$fhuAKWwR8S9aHDErGimE..ogJz5LaJTnEUO0oygeqXg5CF0EjKjcO');
   
 INSERT INTO chiclet_items (completed, content, index, user_id)
 VALUES
