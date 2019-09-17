@@ -277,7 +277,7 @@ describe(`Items Endpoints tests`, function() {
                 .send({ irrelevantField: 'foo' })
                 .expect(400, {
                   error: {
-                    message: `Request body must contain either content or new completed status`
+                    message: `Request body must contain either 'content' or new 'completed' status`
                   }
                 })
             })

@@ -63,7 +63,7 @@ describe('Users Endpoints', function() {
                .expect(400, { error: `Password be longer than 8 characters` })
            })
 
-        it(`responds 400 'Password be less than 72 characters' when long password`, () => {
+        it(`responds 400 'Password be less than 20 characters' when long password`, () => {
                const userLongPassword = {
                  user_name: 'test user_name',
                  password: '*'.repeat(73)
@@ -72,7 +72,7 @@ describe('Users Endpoints', function() {
                return supertest(app)
                  .post('/api/users')
                  .send(userLongPassword)
-                 .expect(400, { error: `Password be less than 72 characters` })
+                 .expect(400, { error: `Password must be less than 20 characters` })
         })
 
         it(`responds 400 error when password starts with spaces`, () => {
