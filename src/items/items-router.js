@@ -106,36 +106,10 @@ itemsRouter
       req.params.itemId,
       newItemFields
     )
-    // .then(item => {
-    //   res.status(201)
-    //   // .json(ItemsService.serializeItem(item))
-    //   .json(item)
-    // })
     .then(numRowsAffected => {
       res.status(204).end()
     })
       .catch(next)
   })
-
-
-/* async/await syntax for promises */
-// async function checkItemExists(req, res, next) {
-//   try {
-//     const item = await ItemsService.getById(
-//       req.app.get('db'),
-//       req.params.thing_id
-//     )
-
-//     if (!item)
-//       return res.status(404).json({
-//         error: `Item doesn't exist`
-//       })
-
-//     res.item = item
-//     next()
-//   } catch (error) {
-//     next(error)
-//   }
-// }
 
 module.exports = itemsRouter

@@ -36,8 +36,6 @@ usersRouter
                     const newUser = {
                         user_name,
                         password: hashedPassword,
-                        // full_name,
-                        // date_created: 'now()',
                     }
                      
             return UsersService.insertUser(

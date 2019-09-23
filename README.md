@@ -1,26 +1,43 @@
-# Express Boilerplate!
+## Introduction
 
-This is a boilerplate project used for starting new projects!
+Chiclet allows users to plan and keep track of their year by month. A user can add items such as special events, goal deadlines, or focus themes to the months and the app provides a view of the entire year. Alternatively, the app can be used as an accomplishment record keeper rather than a planner of future milestones. Users can add new items, delete items, and edit items. 
 
-## Set up
+This app is a capstone project for Thinkful's full stack JavaScript program. 
 
-Complete the following steps to start a new project (NEW-PROJECT-NAME):
+## Build
 
-1. Clone this repository to your local machine `git clone BOILERPLATE-URL NEW-PROJECTS-NAME`
-2. `cd` into the cloned repository
-3. Make a fresh start of the git history for this project with `rm -rf .git && git init`
-4. Install the node dependencies `npm install`
-5. Move the example Environment file to `.env` that will be ignored by git and read by the express server `mv example.env .env`
-6. Edit the contents of the `package.json` to use NEW-PROJECT-NAME instead of `"name": "express-boilerplate",`
+Chiclet's front end is built with React. The back end is built with Express, and PostgreSQL for the databse. The database and server and hosted with Heroku.
 
-## Scripts
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-Start the application `npm start`
+## Live Link: https://www.chiclet.now.sh
 
-Start nodemon for the application `npm run dev`
+## Images
 
-Run the tests `npm test`
+![Chiclet Landing Page](https://user-images.githubusercontent.com/12238742/65449972-226b3000-de0a-11e9-9400-0d3e678bae2e.png)
+***
+![Chiclet Months Page](https://user-images.githubusercontent.com/12238742/65450019-3c0c7780-de0a-11e9-8826-1fc02f5f9906.png)
+***
+![Chiclet Single Month Page](https://user-images.githubusercontent.com/12238742/65450046-49296680-de0a-11e9-9d84-6d7db5d33b19.png)
+***
+![Chiclet Edit Item Page](https://user-images.githubusercontent.com/12238742/65450070-534b6500-de0a-11e9-9937-7931df2753f7.png)
 
-## Deploying
+## Security
+User passwords are hashed using bcrypt.js. Logged in users are provided a JWT for protected requests.
 
-When your new project is ready for deployment, add a new Heroku application with `heroku create`. This will make a new git remote called "heroku" and you can then `npm run deploy` which will push to this remote's master branch.
+## API Documentation
+API endpoints include:
+
+- POST to '/users' to create a new user
+- POST to '/auth/login' to sign in an existing user
+- GET to '/items' to access all of a user's calendar items
+- POST to '/items' to add a new item to the user's calendar
+- PATCH to '/items/:itemId' to update an existing item
+- DELETE to '/items/:itemId' to delete a item
+
+## Future Development
+Additional features and improvements would include:
+
+- Options page with a form for resetting your password or deleting your account
+- Ability to attach photos, files, and dates to items
+- Alternate view of the single month page
